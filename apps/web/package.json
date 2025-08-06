@@ -28,7 +28,7 @@
   },
   "engines": {
     "node": ">=18.0.0",
-    "pnpm": ">=10.12.1"
+    "pnpm": ">=10.14.0"
   },
   "type": "module",
   "scripts": {
@@ -172,5 +172,5 @@
   "ct3aMetadata": {
     "initVersion": "7.38.1"
   },
-  "packageManager": "pnpm@10.12.1"
+  "packageManager": "pnpm@10.14.0"
 }
