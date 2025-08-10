@@ -624,8 +624,8 @@ const PaymentForm = ({
                       subtotal: amount,
                     })
                   }
-                } catch {
-                  console.error('Error updating payment intent amount')
+                } catch (error) {
+                  console.error('Error updating payment intent amount', error)
                 } finally {
                   setIsCalculatingTax(false)
                 }
