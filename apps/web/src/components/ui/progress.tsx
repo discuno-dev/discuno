@@ -3,7 +3,7 @@
 import * as ProgressPrimitive from '@radix-ui/react-progress'
 import * as React from 'react'
 
-import { cn } from '~/lib/utils/tailwind'
+import { cn } from '~/lib/utils'
 
 const Progress = ({
   className,

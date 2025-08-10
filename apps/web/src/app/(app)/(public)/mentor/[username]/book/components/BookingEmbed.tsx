@@ -1,6 +1,12 @@
 'use client'
 
-import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
+import {
+  AddressElement,
+  Elements,
+  PaymentElement,
+  useElements,
+  useStripe,
+} from '@stripe/react-stripe-js'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { addDays, endOfMonth, endOfWeek, format, startOfMonth, startOfWeek } from 'date-fns'
 import { ArrowLeft, CalendarIcon, Clock, CreditCard } from 'lucide-react'
@@ -11,6 +17,10 @@ import type {
   TimeSlot,
 } from '~/app/(app)/(public)/mentor/[username]/book/actions'
 import type { BookingData } from '~/app/(app)/(public)/mentor/[username]/book/components/BookingModal'
+import {
+  calculateTax,
+  updatePaymentIntentAmount,
+} from '~/app/(app)/(public)/mentor/[username]/book/tax-actions'
 import { Badge } from '~/components/ui/badge'
 import { Button } from '~/components/ui/button'
 import { Calendar } from '~/components/ui/calendar'
@@ -55,6 +65,7 @@ export const BookingEmbed = ({ bookingData }: { bookingData: BookingData }) => {
     email: '',
   })
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null)
   const [monthlyAvailability, setMonthlyAvailability] = useState<Record<string, TimeSlot[]>>({})
   // Select today's date on initial load
   useEffect(() => {
@@ -139,6 +150,7 @@ export const BookingEmbed = ({ bookingData }: { bookingData: BookingData }) => {
         setCurrentStep('payment')
 
         setClientSecret(response.clientSecret)
+        setPaymentIntentId(response.paymentIntentId ?? null)
       } else {
         throw new Error(response.error ?? 'Failed to create booking')
       }
@@ -417,6 +429,7 @@ export const BookingEmbed = ({ bookingData }: { bookingData: BookingData }) => {
                 selectedDate={selectedDate}
                 selectedTimeSlot={selectedTimeSlot ?? ''}
                 formData={formData}
+                paymentIntentId={paymentIntentId ?? undefined}
                 onBack={() => setCurrentStep('booking')}
                 onPaymentConfirmed={onPaymentConfirmed}
                 onPaymentError={handlePaymentError}
@@ -435,6 +448,7 @@ interface PaymentFormProps {
   selectedDate: Date
   selectedTimeSlot: string
   formData: BookingFormData
+  paymentIntentId?: string
   onBack: () => void
   onPaymentConfirmed: () => void
   onPaymentError: (error: string) => void
@@ -445,6 +459,7 @@ const PaymentForm = ({
   selectedDate,
   selectedTimeSlot,
   formData,
+  paymentIntentId,
   onBack,
   onPaymentConfirmed,
   onPaymentError,
@@ -453,6 +468,14 @@ const PaymentForm = ({
   const elements = useElements()
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [taxAmount, setTaxAmount] = useState<number>(0)
+  const [totalAmount, setTotalAmount] = useState<number | null>(null)
+  const [lastTaxCalculation, setLastTaxCalculation] = useState<{
+    postal_code: string
+    state: string
+    country: string
+  } | null>(null)
+  const [isCalculatingTax, setIsCalculatingTax] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -467,6 +490,13 @@ const PaymentForm = ({
     try {
       const result = await stripe.confirmPayment({
         elements,
+        confirmParams: {
+          payment_method_data: {
+            billing_details: {
+              email: formData.email,
+            },
+          },
+        },
         redirect: 'if_required',
       })
 
@@ -491,8 +521,10 @@ const PaymentForm = ({
 
   const amount = eventType.price ?? 0
   const platformFee = Math.round(amount * 0.05) // 5% platform fee
-  const total = amount + platformFee
-  const formattedAmount = (total / 100).toFixed(2)
+  const subtotal = amount + platformFee
+  // Note: Tax is calculated on the server and included in the payment intent amount
+  // For display purposes, we'll show a note that tax may apply
+  const formattedAmount = ((totalAmount ?? subtotal) / 100).toFixed(2)
 
   return (
     <Card className="mx-auto w-full max-w-md">
@@ -519,9 +551,12 @@ const PaymentForm = ({
             </div>
             <div className="text-right">
               <p className="text-lg font-bold">${formattedAmount}</p>
-              <p className="text-muted-foreground text-xs">
-                Includes ${(platformFee / 100).toFixed(2)} platform fee
-              </p>
+              <div className="text-muted-foreground space-y-1 text-xs">
+                <p>Base: ${(amount / 100).toFixed(2)}</p>
+                <p>Platform fee: ${(platformFee / 100).toFixed(2)}</p>
+                {isCalculatingTax && <p>Calculating tax...</p>}
+                {taxAmount > 0 && <p>Estimated tax: ${(taxAmount / 100).toFixed(2)}</p>}
+              </div>
             </div>
           </div>
         </div>
@@ -531,6 +566,71 @@ const PaymentForm = ({
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <PaymentElement />
+            <AddressElement
+              options={{ mode: 'billing', defaultValues: { name: formData.name } }}
+              onChange={async ev => {
+                if (!ev.complete || !paymentIntentId) return
+
+                const address = ev.value.address
+                const taxRelevantFields = {
+                  postal_code: address.postal_code || '',
+                  state: address.state || '',
+                  country: address.country || '',
+                }
+
+                // Only calculate tax if tax-relevant fields have changed
+                if (
+                  lastTaxCalculation &&
+                  lastTaxCalculation.postal_code === taxRelevantFields.postal_code &&
+                  lastTaxCalculation.state === taxRelevantFields.state &&
+                  lastTaxCalculation.country === taxRelevantFields.country
+                ) {
+                  return // No change in tax-relevant fields, skip calculation
+                }
+
+                // Require at least postal code and country for tax calculation
+                if (!taxRelevantFields.postal_code || !taxRelevantFields.country) {
+                  return
+                }
+
+                try {
+                  setLastTaxCalculation(taxRelevantFields)
+                  setIsCalculatingTax(true)
+                  const amount = subtotal
+                  const currency = eventType.currency ?? 'USD'
+
+                  const tax = await calculateTax({
+                    amount,
+                    currency,
+                    address: {
+                      line1: address.line1,
+                      line2: address.line2 ?? undefined,
+                      city: address.city,
+                      state: address.state,
+                      postal_code: address.postal_code,
+                      country: address.country,
+                    },
+                    customerEmail: formData.email,
+                  })
+
+                  if (tax.success && tax.totalAmount != null && tax.calculationId) {
+                    setTaxAmount(tax.taxAmount ?? 0)
+                    setTotalAmount(tax.totalAmount)
+                    await updatePaymentIntentAmount({
+                      calculationId: tax.calculationId,
+                      paymentIntentId,
+                      amount: tax.totalAmount,
+                      taxAmount: tax.taxAmount ?? 0,
+                      subtotal: amount,
+                    })
+                  }
+                } catch {
+                  console.error('Error updating payment intent amount')
+                } finally {
+                  setIsCalculatingTax(false)
+                }
+              }}
+            />
           </div>
 
           {message && (
@@ -539,7 +639,11 @@ const PaymentForm = ({
             </div>
           )}
 
-          <Button type="submit" className="w-full" disabled={!stripe || !elements || isLoading}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={!stripe || !elements || isLoading || isCalculatingTax}
+          >
             {isLoading ? 'Processing...' : `Pay $${formattedAmount}`}
           </Button>
         </form>

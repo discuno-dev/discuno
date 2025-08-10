@@ -14,7 +14,7 @@ import {
   CommandList,
 } from '~/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
-import { cn } from '~/lib/utils/tailwind'
+import { cn } from '~/lib/utils'
 
 interface FilterValue {
   value: string

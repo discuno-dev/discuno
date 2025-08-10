@@ -12,7 +12,7 @@ import {
   NavigationMenuTrigger,
 } from '~/components/ui/navigation-menu'
 import { Skeleton } from '~/components/ui/skeleton'
-import { cn } from '~/lib/utils/tailwind'
+import { cn } from '~/lib/utils'
 
 interface NavBarBaseProps {
   profilePic: string | null

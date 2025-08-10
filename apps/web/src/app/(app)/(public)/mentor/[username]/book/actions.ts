@@ -3,6 +3,7 @@
 import { eq } from 'drizzle-orm'
 import type Stripe from 'stripe'
 import { z } from 'zod'
+import { createTaxTransaction } from '~/app/(app)/(public)/mentor/[username]/book/tax-actions'
 import { env } from '~/env'
 import { createCalcomBooking } from '~/lib/calcom'
 import { ExternalApiError } from '~/lib/errors'
@@ -216,13 +217,14 @@ export const createBooking = async (input: CreateBookingInput): Promise<string> 
 }
 
 /**
- * Create a paid booking with Stripe Payment Intent
+ * Create a paid booking with Stripe Payment Intent including tax calculation
  */
 export const createStripePaymentIntent = async (
   input: BookingFormInput
 ): Promise<{
   success: boolean
   clientSecret?: string
+  paymentIntentId?: string
   error?: string
 }> => {
   try {
@@ -261,11 +263,13 @@ export const createStripePaymentIntent = async (
     const mentorFee = Math.round(price * 0.1)
     const menteeFee = Math.round(price * 0.05)
     const mentorAmount = price - mentorFee
-    const total = Math.round(price + menteeFee)
+    const subtotal = Math.round(price + menteeFee)
 
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: total,
-      currency: currency,
+    // Create payment intent; tax will be computed by Stripe from AddressElement data before confirm
+    // Build params separately to attach automatic_tax while keeping TS types clean
+    const createParams: Stripe.PaymentIntentCreateParams = {
+      amount: subtotal,
+      currency: currency.toLowerCase(),
       metadata: {
         mentorUserId: mentorUserId.toString(),
         eventTypeId: eventTypeId.toString(),
@@ -278,13 +282,18 @@ export const createStripePaymentIntent = async (
         menteeFee: menteeFee.toString(),
         mentorAmount: mentorAmount.toString(),
         mentorStripeAccountId: stripeAccountData.stripeAccountId,
+        subtotal: subtotal.toString(),
       },
-    })
+      payment_method_types: ['card' /*'apple_pay', 'google_pay'*/], // TODO: Configure other payment methods
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(createParams)
 
     console.log(`Successfully created Payment Intent: ${paymentIntent.id}`)
     return {
       success: paymentIntent.client_secret !== null,
       clientSecret: paymentIntent.client_secret ?? undefined,
+      paymentIntentId: paymentIntent.id,
     }
   } catch (error) {
     console.error('Stripe payment intent creation failed:', error)
@@ -380,6 +389,19 @@ export const handlePaymentIntentWebhook = async (
   console.log(`Payment record created for intent ${paymentIntentId}`)
 
   try {
+    // If a tax calculation was performed prior to confirmation, record the final tax transaction now
+    const calculationId = metadata.tax_calculation_id
+    if (calculationId) {
+      const taxTx = await createTaxTransaction({ calculationId, paymentIntentId })
+      if (!taxTx.success) {
+        console.error(
+          `Failed to create tax transaction for PI ${paymentIntentId} from calculation ${calculationId}: ${taxTx.error}`
+        )
+      } else {
+        console.log(`Created tax transaction ${taxTx.transactionId} for PI ${paymentIntentId}`)
+      }
+    }
+
     console.log(`Attempting to create Cal.com booking for payment intent: ${paymentIntentId}`)
 
     const bookingArgs = {

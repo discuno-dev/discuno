@@ -1,5 +1,22 @@
 echo "🚀 Running pre-push checks..."
 
+# Stash uncommitted changes (including staged)
+STASH_NAME="pre-push-$(date +%s)"
+git stash push -u -k -m "$STASH_NAME"
+
+STASHED=0
+if git stash list | grep "$STASH_NAME" >/dev/null; then
+  STASHED=1
+fi
+
+cleanup() {
+  if [ $STASHED -eq 1 ]; then
+    echo "🔄 Restoring stashed changes..."
+    git stash pop --index
+  fi
+}
+trap cleanup EXIT
+
 if [ "$SKIP_TESTS" = "1" ]; then
   echo "⚠️  Skipping tests because SKIP_TESTS=1"
 else
