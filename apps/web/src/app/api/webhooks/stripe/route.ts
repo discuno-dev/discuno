@@ -7,6 +7,7 @@ import { stripe } from '~/lib/stripe'
 import { upsertMentorStripeAccount } from '~/server/queries'
 
 export async function POST(req: Request) {
+  console.log(`🔔 Received Stripe webhook`)
   const signature = (await headers()).get('stripe-signature') ?? ''
 
   let event: Stripe.Event
