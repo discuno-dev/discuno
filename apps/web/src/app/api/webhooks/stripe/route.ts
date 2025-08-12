@@ -1,3 +1,4 @@
+import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { Stripe } from 'stripe'
 import { handlePaymentIntentWebhook } from '~/app/(app)/(public)/mentor/[username]/book/actions'
@@ -6,13 +7,12 @@ import { stripe } from '~/lib/stripe'
 import { upsertMentorStripeAccount } from '~/server/queries'
 
 export async function POST(req: Request) {
-  const signature = req.headers.get('stripe-signature') ?? ''
-  const bodyBuffer = Buffer.from(await req.arrayBuffer())
+  const signature = (await headers()).get('stripe-signature') ?? ''
 
   let event: Stripe.Event
 
   try {
-    event = stripe.webhooks.constructEvent(bodyBuffer, signature, env.STRIPE_WEBHOOK_SECRET)
+    event = stripe.webhooks.constructEvent(await req.text(), signature, env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : 'Unknown error'
     console.error(`❌ Webhook signature verification failed: ${errorMessage}`)
