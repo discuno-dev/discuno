@@ -1,15 +1,14 @@
 'use client'
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Dialog, DialogContent, DialogClose, DialogTitle } from '~/components/ui/dialog'
-import { DialogDescription } from '@radix-ui/react-dialog'
-import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { Dialog, DialogContent, DialogTitle } from '~/components/ui/dialog'
 
 type ModalProps = {
   children: React.ReactNode
+  footer?: React.ReactNode
 }
 
-export const Modal = ({ children }: ModalProps) => {
+export const Modal = ({ children, footer }: ModalProps) => {
   const router = useRouter()
   const [open, setOpen] = useState(true)
 
@@ -24,15 +23,18 @@ export const Modal = ({ children }: ModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={isOpen => !isOpen && onDismiss()}>
-      <DialogContent>
-        <DialogTitle>More Info</DialogTitle>
-        <DialogDescription>
-          <Link href="/docs/primitives/alert-dialog">Dashboard</Link>
-        </DialogDescription>
-        {children}
-        <DialogClose asChild>
-          <button onClick={onDismiss} className="close-button" aria-label="Close" />
-        </DialogClose>
+      <DialogContent className="aspect-[9/16] max-h-[85vh] w-full max-w-[85vw] overflow-hidden p-0 focus:outline-none sm:rounded-xl">
+        <DialogTitle className="sr-only">More Info</DialogTitle>
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="flex-1 overflow-hidden [padding-bottom:env(safe-area-inset-bottom)]">
+            {children}
+          </div>
+          {footer && (
+            <div className="border-border bg-background/80 supports-[backdrop-filter]:bg-background/60 z-10 border-t px-4 py-3 backdrop-blur sm:px-6">
+              {footer}
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   )

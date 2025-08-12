@@ -1,53 +1,47 @@
 'use client'
 
-import * as React from 'react'
-import { Sun, Moon } from 'lucide-react'
+import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
-
-import { Button } from '~/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu'
+import { useEffect, useState } from 'react'
 
 export const ModeToggle = () => {
-  const { setTheme } = useTheme()
+  const { setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => setMounted(true), [])
+
+  const toggleTheme = () => {
+    const next = resolvedTheme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+  }
+
+  // Avoid hydration mismatch by waiting until mounted
+  if (!mounted) {
+    return (
+      <button
+        type="button"
+        aria-label="Toggle theme"
+        className="text-muted-foreground hover:text-foreground focus-visible:ring-primary inline-flex h-10 w-10 items-center justify-center rounded-full p-0 transition-colors focus-visible:outline-none focus-visible:ring-2"
+        disabled
+      >
+        <Sun className="h-5 w-5 opacity-0" />
+      </button>
+    )
+  }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="focus:ring-primary h-10 w-10 rounded-full focus:ring-2"
-          aria-label="Toggle theme"
-        >
-          <Sun className="h-5 w-5 fill-current text-yellow-500 dark:hidden" />
-          <Moon className="hidden h-5 w-5 fill-current text-gray-500 dark:block" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="rounded-md bg-white shadow-lg dark:bg-gray-800">
-        <DropdownMenuItem
-          onClick={() => setTheme('light')}
-          className="text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-        >
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme('dark')}
-          className="text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-        >
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme('system')}
-          className="text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-        >
-          System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <button
+      type="button"
+      onClick={toggleTheme}
+      aria-label="Toggle theme"
+      title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
+      className="text-muted-foreground hover:text-foreground focus-visible:ring-primary relative inline-flex h-10 w-10 items-center justify-center rounded-full p-0 transition-transform duration-200 hover:scale-[1.05] focus-visible:outline-none focus-visible:ring-2 active:scale-95"
+    >
+      {/* Sun for light mode */}
+      <Sun className="h-5 w-5 rotate-0 scale-100 transition-all duration-200 dark:-rotate-90 dark:scale-0" />
+      {/* Moon for dark mode */}
+      <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all duration-200 dark:rotate-0 dark:scale-100" />
+      <span className="sr-only">Toggle theme</span>
+    </button>
   )
 }

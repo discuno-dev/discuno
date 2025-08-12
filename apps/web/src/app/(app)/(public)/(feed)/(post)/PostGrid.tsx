@@ -7,6 +7,7 @@ import {
   fetchPostsByFilterAction,
 } from '~/app/(app)/(public)/(feed)/(post)/actions'
 import type { Card } from '~/app/types'
+import { AspectRatio } from '~/components/ui/aspect-ratio'
 import { Skeleton } from '~/components/ui/skeleton'
 
 // Define the PostGridProps interface
@@ -28,7 +29,9 @@ const PostGridSkeleton = () => {
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: 12 }, (_, i) => (
         <div key={i} className="flex flex-col space-y-3">
-          <Skeleton className="h-48 w-full rounded-lg" />
+          <AspectRatio ratio={16 / 9}>
+            <Skeleton className="h-full w-full rounded-lg" />
+          </AspectRatio>
           <div className="space-y-2">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />

@@ -24,31 +24,35 @@ export const BookingButton = ({ bookingData, children, className }: BookingButto
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col p-0">
-          <DialogHeader className="flex-shrink-0 p-6 pb-0">
-            <DialogTitle className="text-xl font-semibold">
-              Schedule with {bookingData.name}
-            </DialogTitle>
-            <div className="mt-2 flex items-center gap-3">
-              {bookingData.image && (
-                <Image
-                  src={bookingData.image}
-                  alt={bookingData.name}
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-              )}
-              <div>
-                <p className="text-muted-foreground text-sm">
-                  {bookingData.school} • {bookingData.major}
-                </p>
+        <DialogContent className="aspect-[9/16] max-h-[85vh] w-full max-w-[85vw] overflow-hidden p-0 focus:outline-none sm:rounded-xl">
+          <div className="flex h-full min-h-0 flex-col">
+            <DialogHeader className="animate-in fade-in slide-in-from-top-2 flex-shrink-0 p-6 pb-0 duration-200">
+              <DialogTitle className="text-xl font-semibold">
+                Schedule with {bookingData.name}
+              </DialogTitle>
+              <div className="mt-2 flex items-center gap-3">
+                {bookingData.image && (
+                  <Image
+                    src={bookingData.image}
+                    alt={bookingData.name}
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                )}
+                <div>
+                  <p className="text-muted-foreground text-sm">
+                    {bookingData.school} • {bookingData.major}
+                  </p>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-hidden [padding-bottom:env(safe-area-inset-bottom)]">
+              <div className="animate-in fade-in h-full overflow-y-auto duration-200">
+                <Suspense fallback={<BookingEmbedSkeleton />}>
+                  <BookingEmbed bookingData={bookingData} />
+                </Suspense>
               </div>
             </div>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-y-auto">
-            <Suspense fallback={<BookingEmbedSkeleton />}>
-              <BookingEmbed bookingData={bookingData} />
-            </Suspense>
           </div>
         </DialogContent>
       </Dialog>

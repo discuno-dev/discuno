@@ -1,5 +1,4 @@
 import { Calendar, Clock, ExternalLink, GraduationCap, School, User } from 'lucide-react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { Modal } from '~/app/(app)/(public)/(feed)/@modal/(.)img/[id]/modal'
 import { BookingInterface } from '~/app/(app)/(public)/mentor/[username]/book/components/BookingInterface'
@@ -19,49 +18,58 @@ const PostModal = async ({ params }: { params: Promise<{ id: string }> }) => {
 
   const post = await getPostById(idAsNumber)
 
-  return (
-    <Modal>
-      <div className="mx-auto max-w-2xl">
-        {/* Header Section */}
-        <div className="relative">
-          {/* Hero Image */}
-          <div className="relative h-64 w-full overflow-hidden rounded-t-xl">
-            <Image
-              src={post.userImage ?? '/images/placeholder.jpg'}
-              alt={post.name ?? 'Student profile'}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+  const footer = (
+    <div className="flex flex-row gap-2">
+      {post.createdById && (
+        <BookingInterface variant="modal" className="min-w-0 flex-1" userId={post.createdById}>
+          <Calendar className="mr-2 h-4 w-4" />
+          <span className="inline sm:hidden">Book</span>
+          <span className="hidden sm:inline">Schedule Meeting</span>
+        </BookingInterface>
+      )}
+      <Button variant="secondary" asChild className="min-w-0 flex-1">
+        <Link href={`/img/${post.id}`} target="_blank" rel="noopener noreferrer">
+          <ExternalLink className="mr-2 h-4 w-4" />
+          <span className="inline sm:hidden">Full Profile</span>
+          <span className="hidden sm:inline">View Full Profile</span>
+        </Link>
+      </Button>
+    </div>
+  )
 
-            {/* Profile Avatar Overlay */}
-            <div className="absolute bottom-4 left-4 flex items-end gap-3">
-              <Avatar className="h-16 w-16 border-4 border-white shadow-lg">
-                <AvatarImage src={post.userImage ?? ''} alt={post.name ?? ''} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-lg font-bold">
-                  {post.name?.charAt(0) ?? 'S'}
-                </AvatarFallback>
-              </Avatar>
-              <div className="mb-2 text-white">
-                <h1 className="text-2xl font-bold drop-shadow-lg">{post.name ?? 'Student Name'}</h1>
-                <Badge variant="secondary" className="mt-1 border-white/30 bg-white/20 text-white">
+  return (
+    <Modal footer={footer}>
+      <div className="w-full">
+        {/* Header */}
+        <div className="rounded-t-xl px-6 pt-6">
+          <div className="flex items-end gap-4 pb-5">
+            <Avatar className="border-border h-14 w-14 border-2 shadow-md">
+              <AvatarImage src={post.userImage ?? ''} alt={post.name ?? ''} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-base font-bold">
+                {post.name?.charAt(0) ?? 'S'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-foreground">
+              <h1 className="text-balance text-xl font-bold leading-tight sm:text-2xl">
+                {post.name ?? 'Student Name'}
+              </h1>
+              {post.schoolYear && (
+                <Badge variant="secondary" className="mt-1">
                   {post.schoolYear}
                 </Badge>
-              </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Content Section */}
-        <div className="space-y-6 p-6">
+        <div className="space-y-5 p-6">
           {/* Academic Info */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
               <School className="text-primary h-5 w-5" />
               <div>
-                <p className="text-muted-foreground text-sm">University</p>
+                <p className="text-muted-foreground hidden text-sm sm:inline">University</p>
                 <p className="text-foreground font-semibold">{post.school}</p>
               </div>
             </div>
@@ -69,7 +77,7 @@ const PostModal = async ({ params }: { params: Promise<{ id: string }> }) => {
             <div className="bg-muted/50 flex items-center gap-3 rounded-lg p-3">
               <GraduationCap className="text-primary h-5 w-5" />
               <div>
-                <p className="text-muted-foreground text-sm">Major</p>
+                <p className="text-muted-foreground hidden text-sm sm:inline">Major</p>
                 <p className="text-foreground font-semibold">{post.major}</p>
               </div>
             </div>
@@ -82,7 +90,9 @@ const PostModal = async ({ params }: { params: Promise<{ id: string }> }) => {
                 <User className="text-primary h-4 w-4" />
                 <h3 className="text-foreground font-semibold">About</h3>
               </div>
-              <p className="text-muted-foreground pl-6 leading-relaxed">{post.description}</p>
+              <p className="text-muted-foreground line-clamp-3 pl-6 leading-relaxed">
+                {post.description}
+              </p>
             </div>
           )}
 
@@ -105,23 +115,7 @@ const PostModal = async ({ params }: { params: Promise<{ id: string }> }) => {
               </span>
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            {post.createdById && (
-              <BookingInterface variant="modal" className="flex-1" userId={post.createdById}>
-                <Calendar className="mr-2 h-4 w-4" />
-                Schedule Meeting
-              </BookingInterface>
-            )}
-
-            <Button variant="outline" asChild className="flex-1">
-              <Link href={`/img/${post.id}`}>
-                <ExternalLink className="mr-2 h-4 w-4" />
-                View Full Profile
-              </Link>
-            </Button>
-          </div>
+          {/* Actions moved to sticky footer via Modal.footer prop */}
         </div>
       </div>
     </Modal>

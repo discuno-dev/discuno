@@ -314,22 +314,6 @@ export default [
   },
 
   // =============================================================================
-  // DISCUNO-ATOMS TESTS (Disable type checking)
-  // =============================================================================
-  {
-    files: PATTERNS.DISCUNO_ATOMS.TESTS,
-    ...tseslint.configs.disableTypeChecked,
-  },
-
-  // =============================================================================
-  // DISCUNO-ATOMS CONFIGS (Disable type checking)
-  // =============================================================================
-  {
-    files: PATTERNS.DISCUNO_ATOMS.CONFIGS,
-    ...tseslint.configs.disableTypeChecked,
-  },
-
-  // =============================================================================
   // JAVASCRIPT FILES (Disable type checking)
   // =============================================================================
   {

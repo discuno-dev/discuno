@@ -7,7 +7,6 @@ const config: Config = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
     './src/lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  plugins: [],
 }
 
 export default config

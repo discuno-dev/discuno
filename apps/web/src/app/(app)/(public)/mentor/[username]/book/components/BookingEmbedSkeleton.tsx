@@ -2,7 +2,7 @@ import { Skeleton } from '~/components/ui/skeleton'
 
 export const BookingEmbedSkeleton = () => {
   return (
-    <div className="min-h-[600px] w-full p-6">
+    <div className="animate-in fade-in min-h-[600px] w-full p-6 duration-200">
       {/* Header skeleton */}
       <div className="mb-6 space-y-3">
         <Skeleton className="h-8 w-48" />
@@ -10,7 +10,7 @@ export const BookingEmbedSkeleton = () => {
       </div>
 
       {/* Calendar view skeleton */}
-      <div className="space-y-4">
+      <div className="animate-in fade-in space-y-4 duration-200">
         {/* Calendar header with month/year */}
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-32" />
