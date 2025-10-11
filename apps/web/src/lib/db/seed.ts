@@ -277,49 +277,6 @@ const userBios = [
   'Architecture major passionate about sustainable design and urban planning. Part of design competition teams and volunteer with Habitat for Humanity. Dream of creating equitable housing.',
 ]
 
-const postDescriptions = [
-  "The path from community college to an Ivy League school taught me resilience, determination, and the value of every opportunity. Here's my complete strategy and timeline.",
-  'After 50+ applications and countless rejections, I finally landed my dream internship. Here are the exact steps I took and what I learned from each failure.',
-  "Our study group went from struggling individually to all earning A's in organic chemistry. Here's the framework we used that you can replicate in any subject.",
-  "Imposter syndrome hit me hardest when I was the only woman in my computer science classes. Here's how I learned to recognize it and develop coping strategies.",
-  'Being first-gen means navigating college without a roadmap. Here are the resources, mentors, and strategies that helped me succeed against the odds.',
-  "Networking events terrified me, but I discovered that introverts have unique networking superpowers. Here's how to leverage your listening skills and build authentic connections.",
-  "The pressure of pre-med requirements took a toll on my mental health. Here's how I learned to prioritize both my GPA and my wellbeing without compromising either.",
-  'Starting our mental health advocacy group from zero members to 500+ taught me valuable lessons about leadership, persistence, and creating real change on campus.',
-  "Six months in Barcelona didn't just improve my Spanish—it completely shifted my career goals and life perspective. Here's what I wish I knew before going abroad.",
-  "Running a startup while juggling coursework is challenging but possible. Here's my honest take on the realities, failures, and unexpected lessons learned.",
-  'After 18 months of online learning, returning to campus felt overwhelming. Here are the strategies that helped me readjust and thrive in person again.',
-  "Research opportunities seemed impossible to get as an undergrad, but I learned the right approach. Here's how to find projects, impress professors, and make meaningful contributions.",
-  "Being 'undecided' felt like falling behind, but it led me to discover my true passion. Here's how I used exploration strategically to find my path.",
-  "My mentor changed my entire college trajectory. Here's how I found amazing mentors and how to build relationships that benefit everyone involved.",
-  'Academic probation was my wake-up call. The journey back to academic success taught me study strategies, self-advocacy, and resilience I use every day.',
-  "Your professors want to see you succeed, but many students don't know how to build those relationships. Here's my guide to meaningful academic mentorship.",
-  "Joining diversity organizations on campus opened doors I never expected and connected me with a community that understood my experience. Here's why representation matters.",
-  "Graduate school applications are overwhelming, but breaking them down systematically makes them manageable. Here's my timeline and strategy for competitive programs.",
-  'Time management in college is different from high school. Here are the systems that helped me balance academics, extracurriculars, and personal life successfully.',
-  "Campus activism taught me that students have real power to create change. Here's how I found my voice and made a tangible impact on important issues.",
-  "Roommate drama can make or break your college experience. Here's how I navigated conflicts, set boundaries, and built lasting friendships in the dorms.",
-  'College is expensive, but strategic planning can reduce the financial burden significantly. Here are the budgeting strategies and resources that saved me thousands.',
-  "My photography hobby became my career path through strategic planning and networking. Here's how to identify marketable skills in your passions.",
-  "Family pressure to pursue pre-med clashed with my passion for art. Here's how I navigated this difficult conversation and found a path that honored both.",
-  "I changed majors three times before finding my calling. Here's what each change taught me and how to know when it's time to pivot.",
-  "Building a network before graduation gave me a huge advantage in the job market. Here's how to start early and maintain relationships authentically.",
-  "My biggest failures in college—bombing presentations, losing leadership positions—became my greatest teachers. Here's how to reframe setbacks as growth opportunities.",
-  "Group projects don't have to be nightmares. Here are the leadership and collaboration strategies that turn dysfunctional teams into high-performing ones.",
-  "Being a perfectionist nearly burned me out completely. Here's how I learned to maintain high standards while prioritizing my mental health and relationships.",
-  "Campus career services seemed useless until I learned how to use them effectively. Here's how to maximize these resources and get personalized support.",
-  "Being one of few people of color in my engineering program was isolating until I found my community. Here's how I navigated this challenge and created support systems.",
-  "Financial aid and scholarships made my education possible. Here's my comprehensive guide to finding and applying for funding, including lesser-known opportunities.",
-  "Public speaking terrified me, but I knew it was essential for my career. Here's how I went from panic attacks to confident presentations through gradual exposure.",
-  "Choosing between graduate school and a job offer was agonizing. Here's the framework I used to make this decision and why timing matters more than you think.",
-  'Finals season used to destroy my mental health until I developed a sustainable self-care routine. Here are practical strategies that actually work during high-stress periods.',
-  "My tutoring business started as a way to earn extra money but became a fulfilling entrepreneurial experience. Here's how to turn academic strengths into income.",
-  "Internship applications felt impossible until I learned what recruiters actually want to see. Here's my step-by-step guide to standing out in a competitive field.",
-  "Taking a gap year was the best decision I made, despite pressure to go straight to college. Here's how gap years can enhance rather than delay your path.",
-  "A strong portfolio opened doors that my GPA alone couldn't. Here's how to create compelling work samples regardless of your field or experience level.",
-  "Learning differently in a traditional education system was challenging, but I found strategies that work. Here's how to advocate for yourself and find your optimal learning style.",
-]
-
 const mentorReviewComments = [
   'Incredible mentor! Their guidance helped me land my dream internship. Always responsive and genuinely cares about student success.',
   'Amazing experience. They provided practical advice for navigating pre-med requirements and shared valuable insights about medical school applications.',
@@ -553,11 +510,9 @@ export const seedDatabase = async (environment?: Environment) => {
       try {
         console.log('📝 Inserting posts...')
         const postingUsers = insertedUsers // All users get exactly one post
-        const selectedDescriptions = getRandomElements(postDescriptions, postingUsers.length)
 
-        const postData = postingUsers.map((user, index) => ({
+        const postData = postingUsers.map(user => ({
           name: user.name ?? 'Untitled Post',
-          description: selectedDescriptions[index],
           createdById: user.id,
         }))
         await db.insert(posts).values(postData)

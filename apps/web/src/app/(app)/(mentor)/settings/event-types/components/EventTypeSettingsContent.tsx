@@ -215,9 +215,9 @@ export const EventTypeSettingsContent = ({
                 <Input
                   id="price"
                   type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.00"
+                  min="5"
+                  step="1"
+                  placeholder="5.00"
                   value={tempPrice}
                   onChange={e => setTempPrice(e.target.value)}
                   className="pl-9"
@@ -226,7 +226,7 @@ export const EventTypeSettingsContent = ({
               </div>
               <p className="text-muted-foreground text-xs">
                 {stripeStatus?.isActive
-                  ? 'Leave empty for free sessions. Minimum price is $1.00.'
+                  ? 'Leave empty for free sessions. Minimum price is $5.00.'
                   : 'Complete Stripe setup to enable paid pricing'}
               </p>
             </div>
@@ -245,7 +245,12 @@ export const EventTypeSettingsContent = ({
               </Button>
               <Button
                 onClick={onSavePricing}
-                disabled={updateEventTypeMutation.isPending || !stripeStatus?.isActive}
+                disabled={
+                  updateEventTypeMutation.isPending ||
+                  !stripeStatus?.isActive ||
+                  parseFloat(tempPrice) < 0 ||
+                  (parseFloat(tempPrice) > 0 && parseFloat(tempPrice) < 5)
+                }
               >
                 {updateEventTypeMutation.isPending ? 'Saving...' : 'Save'}
               </Button>

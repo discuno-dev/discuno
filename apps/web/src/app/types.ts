@@ -7,6 +7,7 @@ import {
 } from '~/lib/schemas/db'
 
 export interface Card extends Post {
+  description: string | null
   random_sort_key: number
   userImage?: string | null
   schoolYear?: string | null

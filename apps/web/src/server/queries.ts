@@ -80,7 +80,6 @@ const buildPostsQuery = () => {
       post: {
         id: posts.id,
         name: posts.name,
-        description: posts.description,
         createdById: posts.createdById,
         createdAt: posts.createdAt,
         updatedAt: posts.updatedAt,
@@ -94,6 +93,7 @@ const buildPostsQuery = () => {
         graduationYear: userProfiles.graduationYear,
         schoolYear: userProfiles.schoolYear,
         rankingScore: userProfiles.rankingScore,
+        bio: userProfiles.bio,
       },
       school: {
         name: schools.name,
@@ -150,6 +150,7 @@ const transformPostResult = (result: PostQueryResult[]): Card[] => {
       uniquePosts.set(post.id, {
         ...post,
         userImage: creator?.image ?? null,
+        description: profile?.bio !== undefined ? profile.bio : null,
         graduationYear: profile?.graduationYear ?? null,
         schoolYear: profile?.schoolYear ?? null,
         school: school?.name ?? null,

@@ -41,7 +41,6 @@ export const posts = pgTable(
   {
     id: integer().primaryKey().generatedByDefaultAsIdentity(),
     name: varchar({ length: 256 }),
-    description: text(),
     createdById: uuid('created_by_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
@@ -319,7 +318,7 @@ export const mentorEventTypes = pgTable(
     customPrice: integer().default(0).notNull(), // Price in cents (e.g., 2500 = $25.00)
     currency: varchar({ length: 3 }).notNull().default('USD'),
     title: varchar({ length: 255 }).notNull(),
-    description: text(),
+    description: varchar({ length: 500 }),
     duration: integer().notNull(),
     ...softDeleteTimestamps,
   },
@@ -355,7 +354,7 @@ export const bookings = pgTable(
 
     // Booking details snapshot
     title: varchar({ length: 500 }).notNull(),
-    description: text(),
+    description: varchar({ length: 1000 }),
     startTime: timestamp({
       mode: 'date',
       withTimezone: true,

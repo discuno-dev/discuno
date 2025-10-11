@@ -6,7 +6,11 @@ import type Stripe from 'stripe'
 import { z } from 'zod'
 import { env } from '~/env'
 import { createCalcomBooking } from '~/lib/calcom'
-import { sendBookingFailureEmail } from '~/lib/emails/booking-notifications'
+import { MINIMUM_PAID_BOOKING_PRICE } from '~/lib/constants'
+import {
+  alertAdminForManualRefund,
+  sendBookingFailureEmail,
+} from '~/lib/emails/booking-notifications'
 import { BadRequestError, ExternalApiError, StripeError } from '~/lib/errors'
 import { stripe } from '~/lib/stripe'
 import { db } from '~/server/db'
@@ -218,8 +222,8 @@ export const createStripeCheckoutSession = async (
       price: subtotal,
     })
 
-    if (subtotal > 0 && subtotal < 100) {
-      throw new BadRequestError('The minimum price for a paid booking is $1.00.')
+    if (subtotal > 0 && subtotal < MINIMUM_PAID_BOOKING_PRICE) {
+      throw new BadRequestError('The minimum price for a paid booking is $5.00.')
     }
 
     if (subtotal === 0) {
@@ -463,7 +467,24 @@ export const handleCheckoutSessionWebhook = async (
       error
     )
 
-    await refundStripePaymentIntent(paymentIntentId)
+    const refundResult = await refundStripePaymentIntent(paymentIntentId)
+
+    if (!refundResult.success) {
+      // Alert admin for manual refund if automatic refund fails
+      console.error(
+        `❌ CRITICAL: Automatic refund failed for ${sessionId}. Manual intervention required!`
+      )
+
+      try {
+        await alertAdminForManualRefund(
+          sessionId,
+          error instanceof Error ? error : new Error('Cal.com booking failed'),
+          new Error(refundResult.error ?? 'Unknown refund error')
+        )
+      } catch (alertError) {
+        console.error('Failed to send admin alert:', alertError)
+      }
+    }
 
     await db
       .update(payments)
@@ -475,10 +496,17 @@ export const handleCheckoutSessionWebhook = async (
       attendeeEmail: metadata.attendeeEmail,
       attendeeName: metadata.attendeeName,
       mentorName: metadata.mentorUsername,
-      reason: 'An unexpected error occurred while creating your booking.',
+      reason: refundResult.success
+        ? 'An unexpected error occurred while creating your booking. Your payment has been refunded.'
+        : 'An unexpected error occurred while creating your booking. Please contact support regarding your payment.',
     })
 
-    return { success: false, error: 'Failed to create booking, payment has been refunded.' }
+    return {
+      success: false,
+      error: refundResult.success
+        ? 'Failed to create booking, payment has been refunded.'
+        : 'Failed to create booking and refund. Please contact support.',
+    }
   }
 }
 

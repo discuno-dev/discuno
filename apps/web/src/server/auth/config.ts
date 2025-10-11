@@ -10,17 +10,16 @@ import { downloadAndUploadProfileImage } from '~/lib/blob'
 import { resend } from '~/lib/emails'
 import { SignInEmail } from '~/lib/emails/templates/SignInEmail'
 import { enforceCalcomIntegration, syncMentorEventTypesForUser } from '~/server/auth/dal'
+import { getAllowedDomains } from '~/server/auth/domain-cache'
 import { db } from '~/server/db'
 import {
   accounts,
-  posts,
   schools,
   sessions,
   users,
   userSchools,
   verificationTokens,
 } from '~/server/db/schema'
-import { getAllowedDomains } from './domain-cache'
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -203,13 +202,6 @@ export const authConfig = {
         } else {
           console.error(`Cannot assign school: invalid email ${user.email}`)
         }
-
-        // Create a new post for the user
-        await db.insert(posts).values({
-          name: user.name,
-          description: 'Welcome to my profile!',
-          createdById: user.id,
-        })
       }
     },
   },

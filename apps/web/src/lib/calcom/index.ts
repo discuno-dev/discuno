@@ -214,6 +214,8 @@ export const createCalcomBooking = async (input: {
     headers: {
       'Content-Type': 'application/json',
       'cal-api-version': '2024-08-13',
+      'x-cal-client-id': env.NEXT_PUBLIC_X_CAL_ID,
+      'x-cal-secret-key': env.X_CAL_SECRET_KEY,
     },
     body: JSON.stringify(calcomPayload),
   })
