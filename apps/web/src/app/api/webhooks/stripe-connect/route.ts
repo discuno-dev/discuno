@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import { connection } from 'next/server'
 import { NextResponse } from 'next/server'
 import type { Stripe } from 'stripe'
 import { env } from '~/env'
@@ -6,6 +7,7 @@ import { upsertMentorStripeAccount } from '~/lib/services/stripe-service'
 import { stripe } from '~/lib/stripe'
 
 export async function POST(req: Request) {
+  await connection()
   const signature = (await headers()).get('stripe-signature') ?? ''
 
   let event: Stripe.Event

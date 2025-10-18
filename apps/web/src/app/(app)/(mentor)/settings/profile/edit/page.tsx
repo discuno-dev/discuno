@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { connection } from 'next/server'
 import { getFullProfile } from '~/server/queries/profiles'
 import { getMajors, getSchools } from '~/server/queries/reference-data'
 import { EditProfileContent } from '../components/EditProfileContent'
@@ -14,6 +15,7 @@ const getEditProfileData = async () => {
 }
 
 const EditProfilePage = async () => {
+  await connection()
   const { profile, schools, majors } = await getEditProfileData()
 
   if (!profile) {

@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import { connection } from 'next/server'
 import { env } from '~/env'
 import { markAsNoShow } from '~/lib/calcom'
 import {
@@ -15,6 +16,7 @@ import { getUserIdByCalcomUserId } from '~/lib/services/calcom-tokens-service'
 import { createAnalyticsEvent } from '~/server/dal/analytics'
 
 export async function POST(req: Request) {
+  await connection()
   const signature = req.headers.get('x-cal-signature-256') ?? ''
   const bodyText = await req.text()
 

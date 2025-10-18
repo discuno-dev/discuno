@@ -1,8 +1,10 @@
 import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
+import { connection } from 'next/server'
 import { NextResponse } from 'next/server'
 import { getUserId } from '~/server/queries/profiles'
 
 export async function POST(request: Request): Promise<NextResponse> {
+  await connection()
   const body = (await request.json()) as HandleUploadBody
 
   try {

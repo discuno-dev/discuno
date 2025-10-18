@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import { connection } from 'next/server'
 import { NextResponse } from 'next/server'
 import type { Stripe } from 'stripe'
 import { handleCheckoutSessionWebhook } from '~/app/(app)/(public)/mentor/[username]/book/actions'
@@ -6,6 +7,7 @@ import { env } from '~/env'
 import { stripe } from '~/lib/stripe'
 
 export async function POST(req: Request) {
+  await connection()
   const signature = (await headers()).get('stripe-signature') ?? ''
 
   let event: Stripe.Event

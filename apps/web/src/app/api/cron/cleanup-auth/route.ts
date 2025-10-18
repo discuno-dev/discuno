@@ -1,10 +1,12 @@
-import { db } from '~/server/db'
-import { sessions, verificationTokens } from '~/server/db/schema'
 import { lt } from 'drizzle-orm'
+import { connection } from 'next/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { db } from '~/server/db'
+import { sessions, verificationTokens } from '~/server/db/schema'
 
 export const GET = async (req: NextRequest) => {
+  await connection()
   const auth = req.headers.get('Authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return new NextResponse('Unauthorized', { status: 401 })
